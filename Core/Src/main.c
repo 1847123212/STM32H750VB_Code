@@ -30,6 +30,7 @@
 /* USER CODE BEGIN Includes */
 #include "stdint.h"
 #include "AD7606.h"
+#include "stdlib.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -59,9 +60,13 @@ extern osSemaphoreId adSampleCpltHandle;
 extern osSemaphoreId FFTStartHandle;
 extern uint8_t firstFlag;
 extern uint16_t transcplt;
-uint16_t data[4096] = {0};
+float data[4096] = {0};
 uint16_t dataCnt = 0;
 extern uint16_t buf[];
+
+uint16_t freqBuf[200] = {0};
+uint8_t freqIndex = 0;
+float freq = -1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -200,15 +205,32 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef * hspi)
 	if(hspi == &hspi1)
   {
 		
-		transcnt +=1;
-    data[dataCnt] = buf[1];
+		transcnt += 1;
+    data[dataCnt] = buf[1];	//Store CH2 data
+		if(abs(buf[1]-6850) < 10)		//Calculate frequency
+		{
+			if(freqIndex == 0 || dataCnt-freqBuf[freqIndex-1] > 20)
+			{
+				freqBuf[freqIndex] = dataCnt;
+				if(freqIndex < 199)	//When freq is too low
+					freqIndex += 1;
+				else
+					freq = 0;
+				
+			}
+
+		}
     dataCnt +=1;
     transcplt = 1;
 		
-    if(dataCnt == 4096)
+    if(dataCnt == 4096)		//Sample in 1 sec
     {
+			if(freq != 0)
+				freq = 4000.0/(freqBuf[80]-freqBuf[0])*40;	//Calculate freq
+			freqIndex = 0;
+			
       transcplt = 0;
-		  osSemaphoreRelease(FFTStartHandle);
+		  osSemaphoreRelease(FFTStartHandle);		//Start FFT
       dataCnt = 0;
     }
 	}

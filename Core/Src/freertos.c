@@ -52,15 +52,15 @@ uint32_t i =0;
 uint8_t firstFlag =0;
 
 uint16_t buf[16] = {0};
-q15_t fftBuf[4096];
-q15_t output[4096];
-uint16_t out[4096] = {0};
-arm_rfft_instance_q15 S;
+//q15_t fftBuf[4096];
+//q15_t output[4096];
+float out[4096] = {0};
+arm_rfft_fast_instance_f32 S;
 arm_status stat;
 
 extern uint16_t transcplt;
 
-extern uint16_t data[4096];
+extern float data[4096];
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
 osThreadId adStartSample_tHandle;
@@ -87,11 +87,12 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
-	stat = arm_rfft_init_q15(&S, 4096, 0, 0);
-  for(int i = 0;i<4096; i++)
-  {
-    fftBuf[i] = arm_sin_q15(0xff*i);
-  }
+//	stat = arm_rfft_init_q15(&S, 4096, 0, 0);
+	stat = arm_rfft_4096_fast_init_f32(&S);
+//  for(int i = 0;i<4096; i++)
+//  {
+//    fftBuf[i] = arm_sin_q15(0xff*i);
+//  }
   /* USER CODE END Init */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -214,7 +215,8 @@ void FFT_task(void const * argument)
   for(;;)
   {
     osSemaphoreWait(FFTStartHandle, osWaitForever);
-    arm_rfft_q15(&S, data, out);
+//    arm_rfft_q15(&S, data, out);
+		//arm_rfft_fast_f32(&S, data, out, 0);
 		transcplt = 1;
   }
   /* USER CODE END FFT_task */
