@@ -152,25 +152,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>220</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134219594</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>../Core/Src/freertos.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\H750_TEST0\../Core/Src/freertos.c\220</Expression>
-        </Bp>
-        <Bp>
-          <Number>1</Number>
-          <Type>0</Type>
           <LineNumber>234</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134229662</Address>
+          <Address>134233082</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -217,6 +201,11 @@
           <count>6</count>
           <WinNumber>1</WinNumber>
           <ItemText>freqBuf,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>7</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>out</ItemText>
         </Ww>
       </WatchWindow1>
       <MemoryWindow1>

@@ -49,12 +49,13 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
 uint32_t i =0;
-uint8_t firstFlag =0;
+uint8_t firstFlag = 0;
+uint8_t firstFlagFFT = 0;
 
 uint16_t buf[16] = {0};
 //q15_t fftBuf[4096];
 //q15_t output[4096];
-float out[4096] = {0};
+float out[8192] = {0};
 arm_rfft_fast_instance_f32 S;
 arm_status stat;
 
@@ -214,9 +215,14 @@ void FFT_task(void const * argument)
   /* Infinite loop */
   for(;;)
   {
+		if(!firstFlagFFT)
+		{
+			osSemaphoreWait(FFTStartHandle, osWaitForever);
+			firstFlagFFT = 1;
+		}
     osSemaphoreWait(FFTStartHandle, osWaitForever);
 //    arm_rfft_q15(&S, data, out);
-		//arm_rfft_fast_f32(&S, data, out, 0);
+		arm_rfft_fast_f32(&S, data, out, 0);
 		transcplt = 1;
   }
   /* USER CODE END FFT_task */
