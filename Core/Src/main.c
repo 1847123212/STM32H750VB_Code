@@ -64,8 +64,8 @@ float data[4096] = {0};
 uint16_t dataCnt = 0;
 extern uint16_t buf[];
 
-uint16_t freqBuf[200] = {0};
-uint8_t freqIndex = 0;
+uint16_t freqBuf[1000] = {0};
+uint16_t freqIndex = 0;
 float freq = -1;
 /* USER CODE END PV */
 
@@ -206,13 +206,19 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef * hspi)
   {
 		
 		transcnt += 1;
-    data[dataCnt] = buf[1];	//Store CH2 data
+		if(transcnt%4 == 0)
+		{
+			if(dataCnt < 4096)
+				data[dataCnt] = buf[1];	//Store CH2 data
+			dataCnt +=1;
+		}
+    
 		if(abs(buf[1]-6850) < 10)		//Calculate frequency
 		{
-			if(freqIndex == 0 || dataCnt-freqBuf[freqIndex-1] > 20)
+			if(freqIndex == 0 || transcnt-freqBuf[freqIndex-1] > 40)
 			{
-				freqBuf[freqIndex] = dataCnt;
-				if(freqIndex < 199)	//When freq is too low
+				freqBuf[freqIndex] = transcnt;
+				if(freqIndex < 999)	//When freq is too low
 					freqIndex += 1;
 				else
 					freq = 0;
@@ -220,14 +226,15 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef * hspi)
 			}
 
 		}
-    dataCnt +=1;
+
     transcplt = 1;
 		
-    if(dataCnt == 4096)		//Sample in 1 sec
+    if(dataCnt == 10240)		//Sample in 1(5) sec
     {
 			if(freq != 0)
-				freq = 4000.0/(freqBuf[80]-freqBuf[0])*40;	//Calculate freq
+				freq = 120000000.0/14648/(freqBuf[400]-freqBuf[0])*200;	//Calculate freq
 			freqIndex = 0;
+			transcnt = 0;
 			
       transcplt = 0;
 		  osSemaphoreRelease(FFTStartHandle);		//Start FFT

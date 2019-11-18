@@ -53,10 +53,10 @@ uint8_t firstFlag = 0;
 uint8_t firstFlagFFT = 0;
 
 uint16_t buf[16] = {0};
-//q15_t fftBuf[4096];
-//q15_t output[4096];
-float out[8192] = {0};
+
+float out[4096] = {0};
 arm_rfft_fast_instance_f32 S;
+//arm_fir_decimate_instance_f32 S_fir50, S_fir100, S_fir150;
 arm_status stat;
 
 extern uint16_t transcplt;
