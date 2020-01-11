@@ -54,7 +54,6 @@
 *.uvgui.*
 *.uvguix.*
 
-Drivers/
 *.htm
 *.bat
 *.sct
@@ -62,3 +61,8 @@ Drivers/
 
 
 # End of https://www.gitignore.io/api/keil
+
+
+# CubeMX Generated thrird-party code
+Middlewares/
+Drivers/
