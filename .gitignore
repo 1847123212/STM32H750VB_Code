@@ -66,7 +66,9 @@
 # CubeMX Generated thrird-party code
 Middlewares/
 Drivers/
+CMSIS5/
 
 # Local file
 .mxproject
+build
 
