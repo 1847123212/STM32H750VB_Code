@@ -66,3 +66,7 @@
 # CubeMX Generated thrird-party code
 Middlewares/
 Drivers/
+
+# Local file
+.mxproject
+
