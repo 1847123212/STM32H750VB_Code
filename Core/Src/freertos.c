@@ -63,39 +63,23 @@ extern uint16_t transcplt;
 
 extern float data[4096];
 /* USER CODE END Variables */
-osThreadId defaultTaskHandle;
-osThreadId adStartSample_tHandle;
-osThreadId FFTHandle;
-osSemaphoreId adSampleHandle;
-osSemaphoreId adSampleCpltHandle;
-osSemaphoreId FFTStartHandle;
+osThreadId_t defaultTaskHandle;
+osThreadId_t adStartSample_tHandle;
+osThreadId_t FFTHandle;
+osSemaphoreId_t adSampleHandle;
+osSemaphoreId_t adSampleCpltHandle;
+osSemaphoreId_t FFTStartHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
    
 /* USER CODE END FunctionPrototypes */
 
-void StartDefaultTask(void const * argument);
-void adStartSample(void const * argument);
-void FFT_task(void const * argument);
+void StartDefaultTask(void *argument);
+void adStartSample(void *argument);
+void FFT_task(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
-
-/* GetIdleTaskMemory prototype (linked to static allocation support) */
-void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize );
-
-/* USER CODE BEGIN GET_IDLE_TASK_MEMORY */
-static StaticTask_t xIdleTaskTCBBuffer;
-static StackType_t xIdleStack[configMINIMAL_STACK_SIZE];
-  
-void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize )
-{
-  *ppxIdleTaskTCBBuffer = &xIdleTaskTCBBuffer;
-  *ppxIdleTaskStackBuffer = &xIdleStack[0];
-  *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
-  /* place for user code */
-}                   
-/* USER CODE END GET_IDLE_TASK_MEMORY */
 
 /**
   * @brief  FreeRTOS initialization
@@ -104,13 +88,9 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackTy
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
-//	stat = arm_rfft_init_q15(&S, 4096, 0, 0);
 	stat = arm_rfft_4096_fast_init_f32(&S);
-//  for(int i = 0;i<4096; i++)
-//  {
-//    fftBuf[i] = arm_sin_q15(0xff*i);
-//  }
   /* USER CODE END Init */
+osKernelInitialize();
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -118,16 +98,22 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the semaphores(s) */
   /* definition and creation of adSample */
-  osSemaphoreDef(adSample);
-  adSampleHandle = osSemaphoreCreate(osSemaphore(adSample), 1);
+  const osSemaphoreAttr_t adSample_attributes = {
+    .name = "adSample"
+  };
+  adSampleHandle = osSemaphoreNew(1, 1, &adSample_attributes);
 
   /* definition and creation of adSampleCplt */
-  osSemaphoreDef(adSampleCplt);
-  adSampleCpltHandle = osSemaphoreCreate(osSemaphore(adSampleCplt), 1);
+  const osSemaphoreAttr_t adSampleCplt_attributes = {
+    .name = "adSampleCplt"
+  };
+  adSampleCpltHandle = osSemaphoreNew(1, 1, &adSampleCplt_attributes);
 
   /* definition and creation of FFTStart */
-  osSemaphoreDef(FFTStart);
-  FFTStartHandle = osSemaphoreCreate(osSemaphore(FFTStart), 1);
+  const osSemaphoreAttr_t FFTStart_attributes = {
+    .name = "FFTStart"
+  };
+  FFTStartHandle = osSemaphoreNew(1, 1, &FFTStart_attributes);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
@@ -143,16 +129,28 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
-  defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+  const osThreadAttr_t defaultTask_attributes = {
+    .name = "defaultTask",
+    .priority = (osPriority_t) osPriorityNormal,
+    .stack_size = 128
+  };
+  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* definition and creation of adStartSample_t */
-  osThreadDef(adStartSample_t, adStartSample, osPriorityLow, 0, 128);
-  adStartSample_tHandle = osThreadCreate(osThread(adStartSample_t), NULL);
+  const osThreadAttr_t adStartSample_t_attributes = {
+    .name = "adStartSample_t",
+    .priority = (osPriority_t) osPriorityLow,
+    .stack_size = 128
+  };
+  adStartSample_tHandle = osThreadNew(adStartSample, NULL, &adStartSample_t_attributes);
 
   /* definition and creation of FFT */
-  osThreadDef(FFT, FFT_task, osPriorityLow, 0, 128);
-  FFTHandle = osThreadCreate(osThread(FFT), NULL);
+  const osThreadAttr_t FFT_attributes = {
+    .name = "FFT",
+    .priority = (osPriority_t) osPriorityLow,
+    .stack_size = 128
+  };
+  FFTHandle = osThreadNew(FFT_task, NULL, &FFT_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -167,7 +165,7 @@ void MX_FREERTOS_Init(void) {
   * @retval None
   */
 /* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void const * argument)
+void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
@@ -187,7 +185,7 @@ void StartDefaultTask(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_adStartSample */
-void adStartSample(void const * argument)
+void adStartSample(void *argument)
 {
   /* USER CODE BEGIN adStartSample */
   /* Infinite loop */
@@ -220,22 +218,21 @@ void adStartSample(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_FFT_task */
-void FFT_task(void const * argument)
+void FFT_task(void *argument)
 {
   /* USER CODE BEGIN FFT_task */
-  /* Infinite loop */
-  for(;;)
-  {
-		if(!firstFlagFFT)
-		{
-			osSemaphoreWait(FFTStartHandle, osWaitForever);
-			firstFlagFFT = 1;
-		}
-    osSemaphoreWait(FFTStartHandle, osWaitForever);
-//    arm_rfft_q15(&S, data, out);
-		arm_rfft_fast_f32(&S, data, out, 0);
-		transcplt = 1;
-  }
+    for(;;)
+    {
+        if(!firstFlagFFT)
+        {
+            osSemaphoreWait(FFTStartHandle, osWaitForever);
+            firstFlagFFT = 1;
+        }
+        osSemaphoreWait(FFTStartHandle, osWaitForever);
+        //    arm_rfft_q15(&S, data, out);
+        arm_rfft_fast_f32(&S, data, out, 0);
+        transcplt = 1;
+    }
   /* USER CODE END FFT_task */
 }
 
