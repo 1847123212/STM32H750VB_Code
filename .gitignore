@@ -71,4 +71,7 @@ CMSIS5/
 # Local file
 .mxproject
 build
+Makefile
+
+.vscode/
 

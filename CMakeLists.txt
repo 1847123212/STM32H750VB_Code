@@ -21,7 +21,7 @@ include_directories(${SOURCE_DIR}/Inc)
 include_directories(${HAL_DIR}/Inc)
 include_directories(${HAL_DIR}/Inc/Legacy)
 include_directories(${RTOS_DIR}/include)
-include_directories(${RTOS_DIR}/CMSIS_RTOS)
+include_directories(${RTOS_DIR}/CMSIS_RTOS_V2)
 include_directories(${RTOS_DIR}/portable/GCC/ARM_CM4F)
 include_directories(${DEVICE_DIR}/Include)
 include_directories(${CMSIS_DIR}/Include)
@@ -50,7 +50,7 @@ set (CMAKE_EXE_LINKER_FLAGS "${MCU} -specs=nano.specs -T../${LDSCRIPT} ${LIBDIR}
 # set (CMAKE_EXE_LINKER_FLAGS "-specs=nano.specs -T../${LDSCRIPT} ${LIBDIR} ${LIBS} -Wl, --cref -Wl, --gc-sections")
 
 
-FILE(GLOB_RECURSE USER_SOURCE ${SOURCE_DIR}/*.c)
+FILE(GLOB_RECURSE CORE_SOURCE ${SOURCE_DIR}/*.c)
 
 
 SET(HAL_SOURCE Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c)
@@ -65,7 +65,8 @@ endforeach(X ${HAL_FEATURES})
 
 FILE(GLOB RTOS_SOURCE ${RTOS_DIR}/*.c)
 List(APPEND RTOS_SOURCE 
-            Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c 
+            Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c 
+            Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os1.c 
             Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c 
             Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c )
 
@@ -82,7 +83,7 @@ set(ARM_CPU "cortex-m7")
 add_subdirectory(${DSP_DIR}/Source)
 
 ADD_EXECUTABLE(${PROJ}.elf 
-                ${USER_SOURCE}
+                ${CORE_SOURCE}
                 ${HAL_SOURCE}
                 ${RTOS_SOURCE}
                 ./startup_stm32h750xx.s
