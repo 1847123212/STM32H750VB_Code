@@ -6,7 +6,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under Ultimate Liberty license
@@ -39,6 +39,9 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
+extern arm_status stat;
+extern arm_rfft_fast_instance_f32 S;
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -48,24 +51,10 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-uint32_t i =0;
-uint8_t firstFlag = 0;
-uint8_t firstFlagFFT = 0;
-
-uint16_t buf[16] = {0};
-
-float out[4096] = {0};
-arm_rfft_fast_instance_f32 S;
-//arm_fir_decimate_instance_f32 S_fir50, S_fir100, S_fir150;
-arm_status stat;
-
-extern uint16_t transcplt;
-
-extern float data[4096];
 /* USER CODE END Variables */
-osThreadId_t defaultTaskHandle;
-osThreadId_t adStartSample_tHandle;
-osThreadId_t FFTHandle;
+osThreadId_t BlinkLEDHandle;
+osThreadId_t ADCSampleHandle;
+osThreadId_t CalulateFFTHandle;
 osSemaphoreId_t adSampleHandle;
 osSemaphoreId_t adSampleCpltHandle;
 osSemaphoreId_t FFTStartHandle;
@@ -75,9 +64,9 @@ osSemaphoreId_t FFTStartHandle;
    
 /* USER CODE END FunctionPrototypes */
 
-void StartDefaultTask(void *argument);
-void adStartSample(void *argument);
-void FFT_task(void *argument);
+void tBlinkLED(void *argument);
+void tADCSample(void *argument);
+void tCalculateFFT(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -88,9 +77,10 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
-	stat = arm_rfft_4096_fast_init_f32(&S);
+       
+//  stat = arm_rfft_4096_fast_init_f32(&S);
   /* USER CODE END Init */
-osKernelInitialize();
+  osKernelInitialize();
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -128,29 +118,29 @@ osKernelInitialize();
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* definition and creation of defaultTask */
-  const osThreadAttr_t defaultTask_attributes = {
-    .name = "defaultTask",
+  /* definition and creation of BlinkLED */
+  const osThreadAttr_t BlinkLED_attributes = {
+    .name = "BlinkLED",
     .priority = (osPriority_t) osPriorityNormal,
     .stack_size = 128
   };
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  BlinkLEDHandle = osThreadNew(tBlinkLED, NULL, &BlinkLED_attributes);
 
-  /* definition and creation of adStartSample_t */
-  const osThreadAttr_t adStartSample_t_attributes = {
-    .name = "adStartSample_t",
+  /* definition and creation of ADCSample */
+  const osThreadAttr_t ADCSample_attributes = {
+    .name = "ADCSample",
+    .priority = (osPriority_t) osPriorityAboveNormal,
+    .stack_size = 128
+  };
+  ADCSampleHandle = osThreadNew(tADCSample, NULL, &ADCSample_attributes);
+
+  /* definition and creation of CalulateFFT */
+  const osThreadAttr_t CalulateFFT_attributes = {
+    .name = "CalulateFFT",
     .priority = (osPriority_t) osPriorityLow,
     .stack_size = 128
   };
-  adStartSample_tHandle = osThreadNew(adStartSample, NULL, &adStartSample_t_attributes);
-
-  /* definition and creation of FFT */
-  const osThreadAttr_t FFT_attributes = {
-    .name = "FFT",
-    .priority = (osPriority_t) osPriorityLow,
-    .stack_size = 128
-  };
-  FFTHandle = osThreadNew(FFT_task, NULL, &FFT_attributes);
+  CalulateFFTHandle = osThreadNew(tCalculateFFT, NULL, &CalulateFFT_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -158,81 +148,58 @@ osKernelInitialize();
 
 }
 
-/* USER CODE BEGIN Header_StartDefaultTask */
+/* USER CODE BEGIN Header_tBlinkLED */
 /**
-  * @brief  Function implementing the defaultTask thread.
+  * @brief  Function implementing the BlinkLED thread.
   * @param  argument: Not used 
   * @retval None
   */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
+/* USER CODE END Header_tBlinkLED */
+__weak void tBlinkLED(void *argument)
 {
-  /* USER CODE BEGIN StartDefaultTask */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1000);
-		i+=1;
-    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_0);
-  }
-  /* USER CODE END StartDefaultTask */
-}
-
-/* USER CODE BEGIN Header_adStartSample */
-/**
-* @brief Function implementing the adStartSample_t thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_adStartSample */
-void adStartSample(void *argument)
-{
-  /* USER CODE BEGIN adStartSample */
+  /* USER CODE BEGIN tBlinkLED */
   /* Infinite loop */
   for(;;)
   {
     osDelay(1);
-		{
-			firstFlag = 1;
-		}
-		else
-		{
-			osSemaphoreWait(adSampleCpltHandle, osWaitForever);
-			AD7606_CS_H;
-			AD7606_STARTCONV();
-
-			while(AD7606_BUSY);
-			AD7606_CS_L;
-
-			HAL_SPI_Receive_IT(&hspi1,(uint8_t * )buf,8);
-		}
-	}
-  /* USER CODE END adStartSample */
+  }
+  /* USER CODE END tBlinkLED */
 }
 
-/* USER CODE BEGIN Header_FFT_task */
+/* USER CODE BEGIN Header_tADCSample */
 /**
-* @brief Function implementing the FFT thread.
+* @brief Function implementing the ADCSample thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_FFT_task */
-void FFT_task(void *argument)
+/* USER CODE END Header_tADCSample */
+__weak void tADCSample(void *argument)
 {
-  /* USER CODE BEGIN FFT_task */
-    for(;;)
-    {
-        if(!firstFlagFFT)
-        {
-            osSemaphoreWait(FFTStartHandle, osWaitForever);
-            firstFlagFFT = 1;
-        }
-        osSemaphoreWait(FFTStartHandle, osWaitForever);
-        //    arm_rfft_q15(&S, data, out);
-        arm_rfft_fast_f32(&S, data, out, 0);
-        transcplt = 1;
-    }
-  /* USER CODE END FFT_task */
+  /* USER CODE BEGIN tADCSample */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END tADCSample */
+}
+
+/* USER CODE BEGIN Header_tCalculateFFT */
+/**
+* @brief Function implementing the CalulateFFT thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_tCalculateFFT */
+__weak void tCalculateFFT(void *argument)
+{
+  /* USER CODE BEGIN tCalculateFFT */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END tCalculateFFT */
 }
 
 /* Private application code --------------------------------------------------*/
