@@ -191,9 +191,8 @@ void adStartSample(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    if(!firstFlag)
+    osDelay(1);
 		{
-			osSemaphoreWait(adSampleCpltHandle, osWaitForever);
 			firstFlag = 1;
 		}
 		else
