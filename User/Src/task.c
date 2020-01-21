@@ -6,6 +6,7 @@
 #include "spi.h"
 #include "arm_math.h"
 #include "BC26.h"
+#include "stdio.h"
 
 uint32_t i = 0;
 uint8_t firstFlag = 0;
@@ -30,6 +31,7 @@ void tBlinkLED(void *arg) {
 
 	for (;;) {
 		osDelay(1000);
+	    ITM_SendChar('h');
 		i += 1;
 		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
 	}
