@@ -76,7 +76,7 @@ void MX_FREERTOS_Init(void) {
   PAGlobalInit();
        
   /* USER CODE END Init */
-  osKernelInitialize();
+osKernelInitialize();
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
