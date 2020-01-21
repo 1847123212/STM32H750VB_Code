@@ -26,9 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */     
-#include "AD7606.h"
-#include "spi.h"
-#include "arm_math.h"
+#include "pacommon.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -39,8 +37,6 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
-extern arm_status stat;
-extern arm_rfft_fast_instance_f32 S;
 
 /* USER CODE END PD */
 
@@ -77,8 +73,8 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
+  PAGlobalInit();
        
-//  stat = arm_rfft_4096_fast_init_f32(&S);
   /* USER CODE END Init */
   osKernelInitialize();
 

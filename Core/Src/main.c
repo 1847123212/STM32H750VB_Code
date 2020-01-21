@@ -114,8 +114,6 @@ int main(void)
   MX_TIM2_Init();
   MX_DMA_Init();
   /* USER CODE BEGIN 2 */
-	AD7606_init();
-	HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
@@ -264,7 +262,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim->Instance == TIM2) {
 		if(firstFlag){
 			timCnt+=1;
-      trans = 1;
+			trans = 1;
 
 			if(transcplt==1){
 				transcplt = 0;
